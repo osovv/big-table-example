@@ -157,7 +157,20 @@ const mapLevelsToComboboxOptions = (levels: Level[]): ComboboxOptions => {
 
 const comboboxOptions = mapLevelsToComboboxOptions(levels);
 
+const makeData = (len: number, startingIndex: number): Item[] => {
+  return Array.from(Array(len), (_, i) => ({
+    id: startingIndex + i,
+    level1: null,
+    level2: null,
+    level3: null,
+    level4: null,
+    level5: null,
+    level6: null,
+  }));
+};
+
 export default function Home() {
+  const [tableData, setTableData] = useState<Item[]>(makeData(40, 1));
   const [rowsCount, setRowsCounts] = useState("");
 
   const handleRowsCountChange = (
@@ -168,8 +181,11 @@ export default function Home() {
 
   const handleAddRowsClick = () => {
     const count = Number(rowsCount);
+    const lastIndex = tableData[tableData.length - 1]!.id;
+    const newRows = makeData(count, lastIndex + 1);
     console.log(`Add ${count} rows`);
     setRowsCounts("");
+    setTableData((d) => [...d, ...newRows]);
   };
 
   const handleSaveClick = () => {
@@ -184,7 +200,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="container flex min-h-screen flex-col items-center justify-center gap-2">
-        <DataTable data={data} columns={columns} />
+        <DataTable data={tableData} columns={columns} />
 
         <div className="item-row flex gap-2 self-start">
           <Button variant={"secondary"} onClick={handleAddRowsClick}>

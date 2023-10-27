@@ -1,6 +1,7 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import Head from "next/head";
 import { useState } from "react";
+import { Combobox, type ComboboxOptions } from "~/components/combobox";
 import { Button } from "~/components/ui/button";
 import { DataTable } from "~/components/ui/data-table";
 import { Input } from "~/components/ui/input";
@@ -99,6 +100,63 @@ const data: Item[] = [
   },
 ];
 
+const levels: Level[] = [
+  {
+    id: "1.1",
+    parentId: null,
+  },
+  {
+    id: "1.2",
+    parentId: null,
+  },
+  {
+    id: "2.1",
+    parentId: "1.1",
+  },
+  {
+    id: "2.2",
+    parentId: "1.2",
+  },
+  {
+    id: "3.1",
+    parentId: "2.1",
+  },
+  {
+    id: "3.2",
+    parentId: "2.2",
+  },
+  {
+    id: "4.1",
+    parentId: "3.1",
+  },
+  {
+    id: "4.2",
+    parentId: "3.2",
+  },
+  {
+    id: "5.1",
+    parentId: "4.1",
+  },
+  {
+    id: "5.2",
+    parentId: "4.2",
+  },
+];
+
+const mapLevelsToComboboxOptions = (levels: Level[]): ComboboxOptions => {
+  return levels.reduce((acc, { id, parentId }) => {
+    const key = parentId ?? "none";
+    if (acc[key]) {
+      acc[key]!.push({ id });
+    } else {
+      acc[key] = [{ id }];
+    }
+    return acc;
+  }, {} as ComboboxOptions);
+};
+
+const comboboxOptions = mapLevelsToComboboxOptions(levels);
+
 export default function Home() {
   const [rowsCount, setRowsCounts] = useState("");
 
@@ -141,6 +199,11 @@ export default function Home() {
         </div>
         <div className="self-start">
           <Button onClick={handleSaveClick}>Save</Button>
+        </div>
+
+        <div className="self-start">
+          <p>Combobox demo</p>
+          <Combobox options={comboboxOptions} parentId={null} />
         </div>
       </main>
     </>

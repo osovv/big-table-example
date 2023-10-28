@@ -141,7 +141,6 @@ const columns: ColumnDef<Item>[] = [
   {
     accessorKey: "id",
     header: "№",
-    size: 240,
   },
   {
     accessorKey: "1",

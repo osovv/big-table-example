@@ -13,7 +13,7 @@ import {
   type Table as TableType,
 } from "@tanstack/react-table";
 import { useVirtual } from "@tanstack/react-virtual";
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 
 interface DataTableProps<TData, TValue> {
   table: TableType<TData>;
@@ -32,8 +32,8 @@ export function DataTable<TData, TValue>({
     parentRef: tableContainerRef,
     size: rows.length,
     overscan: 10,
+    estimateSize: useCallback(() => 91, []),
   });
-  columns;
   const { virtualItems: virtualRows, totalSize } = rowVirtualizer;
 
   const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start ?? 0 : 0;

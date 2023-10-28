@@ -6,7 +6,13 @@ import {
   getCoreRowModel,
 } from "@tanstack/react-table";
 import Head from "next/head";
-import { useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import { Combobox, type ComboboxOptions } from "~/components/combobox";
 import { Button } from "~/components/ui/button";
 import { DataTable } from "~/components/ui/data-table";
@@ -27,7 +33,7 @@ type Item = {
   6: Level | null;
 };
 
-const levels: Level[] = [
+const initialLevels: Level[] = [
   {
     id: "1.1",
     parentId: null,
@@ -82,7 +88,56 @@ const mapLevelsToComboboxOptions = (levels: Level[]): ComboboxOptions => {
   }, {} as ComboboxOptions);
 };
 
-const comboboxOptions = mapLevelsToComboboxOptions(levels);
+type ComboboxOptionsContextType = {
+  options: ComboboxOptions;
+  addLevel: (level: Level) => void;
+};
+
+const ComboboxOptionsContext = createContext<ComboboxOptionsContextType | null>(
+  null,
+);
+
+const useComboboxOptionsContext = () => {
+  const context = useContext(ComboboxOptionsContext);
+
+  if (!context) {
+    throw new Error(
+      "useComboboxOptionsContext must be used inside children of ComboboxOptionsContextProvider",
+    );
+  }
+
+  return context;
+};
+
+const ComboboxOptionsContextProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const [levels, setLevels] = useState<Level[]>(initialLevels);
+
+  const options = useMemo(() => {
+    return mapLevelsToComboboxOptions(levels);
+  }, [levels]);
+
+  const addLevel = useCallback((level: Level) => {
+    setLevels((ls) => [...ls, level]);
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      options,
+      addLevel,
+    }),
+    [options, addLevel],
+  );
+
+  return (
+    <ComboboxOptionsContext.Provider value={value}>
+      {children}
+    </ComboboxOptionsContext.Provider>
+  );
+};
 
 const Cell = (props: CellContext<Item, unknown>) => {
   const currentColumnId = props.column.id;
@@ -90,6 +145,8 @@ const Cell = (props: CellContext<Item, unknown>) => {
     currentColumnId === "1" ? null : (Number(currentColumnId) - 1).toString();
 
   const currentColumnValue = props.cell.getValue();
+
+  const { options, addLevel } = useComboboxOptionsContext();
 
   if (previousColumnId === null) {
     const onChange = (val: string) => {
@@ -105,8 +162,9 @@ const Cell = (props: CellContext<Item, unknown>) => {
       <Combobox
         value={currentColumnValue?.id ?? ""}
         parentId={null}
-        options={comboboxOptions}
+        options={options}
         onChange={onChange}
+        addLevel={addLevel}
       />
     );
   }
@@ -131,8 +189,9 @@ const Cell = (props: CellContext<Item, unknown>) => {
     <Combobox
       value={currentColumnValue?.id ?? ""}
       parentId={previousColumnValue.id}
-      options={comboboxOptions}
+      options={options}
       onChange={onChange}
+      addLevel={addLevel}
     />
   );
 };
@@ -249,7 +308,7 @@ export default function Home() {
               };
 
               const result = levelsToReset.reduce((acc, levelToReset) => {
-                acc[levelToReset] = null;
+                acc[levelToReset as keyof Omit<typeof acc, "id">] = null;
                 return acc;
               }, updatedRow);
 
@@ -271,7 +330,9 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="container flex min-h-screen flex-col items-center justify-center gap-2">
-        <DataTable table={table} />
+        <ComboboxOptionsContextProvider>
+          <DataTable table={table} />
+        </ComboboxOptionsContextProvider>
 
         <div className="item-row flex gap-2 self-start">
           <Button variant={"secondary"} onClick={handleAddRowsClick}>

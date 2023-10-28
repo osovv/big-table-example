@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useCommandState } from "cmdk";
 
 export type ComboboxOptionItem = {
   id: string;
@@ -28,9 +29,30 @@ export type ComboboxOptions = {
 type ComboboxProps = {
   options: ComboboxOptions;
   parentId: string | null;
-  addOption?: (option: { id: string; parentId: string | null }) => void;
+  addLevel: (level: { id: string; parentId: string | null }) => void;
   onChange: (value: string) => void;
   value: string;
+};
+
+type SearchEmptyProps = {
+  addLevel: ComboboxProps["addLevel"];
+  onChange: ComboboxProps["onChange"];
+  parentId: ComboboxProps["parentId"];
+};
+
+const SearchEmpty = ({ addLevel, onChange, parentId }: SearchEmptyProps) => {
+  const search = useCommandState((state) => state.search);
+
+  return (
+    <Button
+      onClick={() => {
+        onChange(search);
+        addLevel({ id: search, parentId });
+      }}
+    >
+      + Add option
+    </Button>
+  );
 };
 
 export function Combobox({
@@ -38,6 +60,7 @@ export function Combobox({
   options: _allOptions,
   onChange,
   value,
+  addLevel,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -63,7 +86,13 @@ export function Combobox({
       <PopoverContent className="w-[200px] p-0">
         <Command>
           <CommandInput placeholder="Search option..." />
-          <CommandEmpty>No option found.</CommandEmpty>
+          <CommandEmpty>
+            <SearchEmpty
+              parentId={parentId}
+              addLevel={addLevel}
+              onChange={onChange}
+            />
+          </CommandEmpty>
           <CommandGroup>
             {options.map((option) => (
               <CommandItem

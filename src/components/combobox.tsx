@@ -29,9 +29,14 @@ type ComboboxProps = {
   options: ComboboxOptions;
   parentId: string | null;
   addOption?: (option: { id: string; parentId: string | null }) => void;
+  onChange: (value: string) => void;
 };
 
-export function Combobox({ parentId, options: _allOptions }: ComboboxProps) {
+export function Combobox({
+  parentId,
+  options: _allOptions,
+  onChange,
+}: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
   const [value, setValue] = React.useState("");
@@ -65,7 +70,9 @@ export function Combobox({ parentId, options: _allOptions }: ComboboxProps) {
                 key={option.id}
                 value={option.id}
                 onSelect={(currentValue) => {
-                  setValue(currentValue === value ? "" : currentValue);
+                  const res = currentValue === value ? "" : currentValue;
+                  setValue(res);
+                  onChange(res);
                   setOpen(false);
                 }}
               >

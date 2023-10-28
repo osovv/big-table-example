@@ -10,34 +10,30 @@ import {
   useReactTable,
   type ColumnDef,
   flexRender,
-  getCoreRowModel,
+  type Table as TableType,
 } from "@tanstack/react-table";
 import { useVirtual } from "@tanstack/react-virtual";
 import { useRef } from "react";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
+  table: TableType<TData>;
 }
 
 export function DataTable<TData, TValue>({
-  columns,
-  data,
+  table,
 }: DataTableProps<TData, TValue>) {
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
 
   const { rows } = table.getRowModel();
+
+  const columns = table.getAllColumns();
 
   const rowVirtualizer = useVirtual({
     parentRef: tableContainerRef,
     size: rows.length,
     overscan: 10,
   });
+  columns;
   const { virtualItems: virtualRows, totalSize } = rowVirtualizer;
 
   const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start ?? 0 : 0;
@@ -48,13 +44,14 @@ export function DataTable<TData, TValue>({
 
   return (
     <div ref={tableContainerRef} className="max-h-[500px] w-full overflow-auto">
-      <Table>
+      <Table className="table-fixed">
         <TableHeader className="sticky top-0 z-10 bg-white">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
+                const size = header.getContext().column.getSize();
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} style={{ width: size }}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -82,14 +79,18 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const size = cell.getContext().column.getSize();
+
+                    return (
+                      <TableCell key={cell.id} style={{ width: size }}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               );
             })

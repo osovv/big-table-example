@@ -1,4 +1,10 @@
-import { type ColumnDef } from "@tanstack/react-table";
+import {
+  createColumnHelper,
+  type ColumnDef,
+  type CellContext,
+  useReactTable,
+  getCoreRowModel,
+} from "@tanstack/react-table";
 import Head from "next/head";
 import { useState } from "react";
 import { Combobox, type ComboboxOptions } from "~/components/combobox";
@@ -13,92 +19,13 @@ type Level = {
 
 type Item = {
   id: number;
-  level1: Level | null;
-  level2: Level | null;
-  level3: Level | null;
-  level4: Level | null;
-  level5: Level | null;
-  level6: Level | null;
+  1: Level | null;
+  2: Level | null;
+  3: Level | null;
+  4: Level | null;
+  5: Level | null;
+  6: Level | null;
 };
-
-const columns: ColumnDef<Item>[] = [
-  {
-    accessorKey: "id",
-    header: "№",
-  },
-  {
-    accessorKey: "level1",
-    header: "Level 1",
-  },
-  {
-    accessorKey: "level2",
-    header: "Level 2",
-  },
-  {
-    accessorKey: "level3",
-    header: "Level 3",
-  },
-  {
-    accessorKey: "level4",
-    header: "Level 4",
-  },
-  {
-    accessorKey: "level5",
-    header: "Level 5",
-  },
-  {
-    accessorKey: "level6",
-    header: "Level 6",
-  },
-];
-
-const data: Item[] = [
-  {
-    id: 1,
-    level1: null,
-    level2: null,
-    level3: null,
-    level4: null,
-    level5: null,
-    level6: null,
-  },
-  {
-    id: 2,
-    level1: null,
-    level2: null,
-    level3: null,
-    level4: null,
-    level5: null,
-    level6: null,
-  },
-  {
-    id: 3,
-    level1: null,
-    level2: null,
-    level3: null,
-    level4: null,
-    level5: null,
-    level6: null,
-  },
-  {
-    id: 4,
-    level1: null,
-    level2: null,
-    level3: null,
-    level4: null,
-    level5: null,
-    level6: null,
-  },
-  {
-    id: 5,
-    level1: null,
-    level2: null,
-    level3: null,
-    level4: null,
-    level5: null,
-    level6: null,
-  },
-];
 
 const levels: Level[] = [
   {
@@ -157,15 +84,106 @@ const mapLevelsToComboboxOptions = (levels: Level[]): ComboboxOptions => {
 
 const comboboxOptions = mapLevelsToComboboxOptions(levels);
 
+const Cell = (props: CellContext<Item, unknown>) => {
+  const currentColumnId = props.column.id;
+  const previousColumnId =
+    currentColumnId === "1" ? null : (Number(currentColumnId) - 1).toString();
+
+  const currentColumnvalue = props.cell.getValue();
+
+  if (previousColumnId === null) {
+    const onChange = (val: string) => {
+      const value: Level | null =
+        val === "" ? null : { id: val, parentId: null };
+      props.table.options.meta?.updateData(
+        props.row.index,
+        currentColumnId,
+        value,
+      );
+    };
+    return (
+      <Combobox parentId={null} options={comboboxOptions} onChange={onChange} />
+    );
+  }
+
+  const previousColumnValue = props.row.getValue(previousColumnId);
+
+  if (previousColumnValue === null) {
+    return null;
+  }
+
+  const onChange = (val: string) => {
+    const value: Level | null =
+      val === "" ? null : { id: val, parentId: previousColumnValue.id };
+    props.table.options.meta?.updateData(
+      props.row.index,
+      currentColumnId,
+      value,
+    );
+  };
+
+  return (
+    <Combobox
+      parentId={previousColumnValue.id}
+      options={comboboxOptions}
+      onChange={onChange}
+    />
+  );
+};
+
+const columns: ColumnDef<Item>[] = [
+  {
+    accessorKey: "id",
+    header: "№",
+    size: 240,
+  },
+  {
+    accessorKey: "1",
+    header: "Level 1",
+    cell: Cell,
+    size: 240,
+  },
+  {
+    accessorKey: "2",
+    header: "Level 2",
+    cell: Cell,
+    size: 240,
+  },
+  {
+    accessorKey: "3",
+    header: "Level 3",
+    cell: Cell,
+    size: 240,
+  },
+  {
+    accessorKey: "4",
+    header: "Level 4",
+    cell: Cell,
+    size: 240,
+  },
+  {
+    accessorKey: "5",
+    header: "Level 5",
+    cell: Cell,
+    size: 240,
+  },
+  {
+    accessorKey: "6",
+    header: "Level 6",
+    cell: Cell,
+    size: 240,
+  },
+];
+
 const makeData = (len: number, startingIndex: number): Item[] => {
   return Array.from(Array(len), (_, i) => ({
     id: startingIndex + i,
-    level1: null,
-    level2: null,
-    level3: null,
-    level4: null,
-    level5: null,
-    level6: null,
+    1: null,
+    2: null,
+    3: null,
+    4: null,
+    5: null,
+    6: null,
   }));
 };
 
@@ -192,6 +210,31 @@ export default function Home() {
     console.log("Save");
   };
 
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    meta: {
+      updateData: (rowIndex: number, columnId: string, value: Level | null) => {
+        setTableData((old) =>
+          old.map((row, index) => {
+            if (columnId === "id") {
+              return row;
+            }
+
+            if (index === rowIndex) {
+              return {
+                ...old[rowIndex]!,
+                [columnId]: value,
+              };
+            }
+            return row;
+          }),
+        );
+      },
+    },
+  });
+
   return (
     <>
       <Head>
@@ -200,7 +243,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="container flex min-h-screen flex-col items-center justify-center gap-2">
-        <DataTable data={tableData} columns={columns} />
+        <DataTable table={table} />
 
         <div className="item-row flex gap-2 self-start">
           <Button variant={"secondary"} onClick={handleAddRowsClick}>
@@ -215,11 +258,6 @@ export default function Home() {
         </div>
         <div className="self-start">
           <Button onClick={handleSaveClick}>Save</Button>
-        </div>
-
-        <div className="self-start">
-          <p>Combobox demo</p>
-          <Combobox options={comboboxOptions} parentId={null} />
         </div>
       </main>
     </>

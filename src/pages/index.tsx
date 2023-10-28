@@ -89,7 +89,7 @@ const Cell = (props: CellContext<Item, unknown>) => {
   const previousColumnId =
     currentColumnId === "1" ? null : (Number(currentColumnId) - 1).toString();
 
-  const currentColumnvalue = props.cell.getValue();
+  const currentColumnValue = props.cell.getValue();
 
   if (previousColumnId === null) {
     const onChange = (val: string) => {
@@ -102,7 +102,12 @@ const Cell = (props: CellContext<Item, unknown>) => {
       );
     };
     return (
-      <Combobox parentId={null} options={comboboxOptions} onChange={onChange} />
+      <Combobox
+        value={currentColumnValue?.id ?? ""}
+        parentId={null}
+        options={comboboxOptions}
+        onChange={onChange}
+      />
     );
   }
 
@@ -124,6 +129,7 @@ const Cell = (props: CellContext<Item, unknown>) => {
 
   return (
     <Combobox
+      value={currentColumnValue?.id ?? ""}
       parentId={previousColumnValue.id}
       options={comboboxOptions}
       onChange={onChange}
@@ -187,6 +193,12 @@ const makeData = (len: number, startingIndex: number): Item[] => {
   }));
 };
 
+const createArray = ({ min, max }: { min: number; max: number }) => {
+  return Array.from(Array(max + 1 - min)).map(function (_, idx) {
+    return idx + min;
+  });
+};
+
 export default function Home() {
   const [tableData, setTableData] = useState<Item[]>(makeData(40, 1));
   const [rowsCount, setRowsCounts] = useState("");
@@ -201,14 +213,16 @@ export default function Home() {
     const count = Number(rowsCount);
     const lastIndex = tableData[tableData.length - 1]!.id;
     const newRows = makeData(count, lastIndex + 1);
-    console.log(`Add ${count} rows`);
     setRowsCounts("");
     setTableData((d) => [...d, ...newRows]);
+    console.log(`Add ${count} rows`);
   };
 
   const handleSaveClick = () => {
     console.log("Save");
   };
+
+  const maxLevel = 6;
 
   const table = useReactTable({
     data: tableData,
@@ -216,18 +230,33 @@ export default function Home() {
     getCoreRowModel: getCoreRowModel(),
     meta: {
       updateData: (rowIndex: number, columnId: string, value: Level | null) => {
+        if (columnId === "id") {
+          return;
+        }
+
         setTableData((old) =>
           old.map((row, index) => {
-            if (columnId === "id") {
-              return row;
-            }
+            const level = Number(columnId);
 
             if (index === rowIndex) {
-              return {
-                ...old[rowIndex]!,
+              const levelsToReset = createArray({
+                min: level + 1,
+                max: maxLevel,
+              });
+
+              const updatedRow = {
+                ...row,
                 [columnId]: value,
               };
+
+              const result = levelsToReset.reduce((acc, levelToReset) => {
+                acc[levelToReset] = null;
+                return acc;
+              }, updatedRow);
+
+              return result;
             }
+
             return row;
           }),
         );

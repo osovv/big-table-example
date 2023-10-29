@@ -172,6 +172,8 @@ export const BigTable = () => {
     console.group("Updated fields");
     console.log(updatedFields);
     console.groupEnd();
+
+    touchedFields.clear();
   };
 
   const maxLevel = 6;

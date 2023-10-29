@@ -94,25 +94,27 @@ export function Combobox({
             />
           </CommandEmpty>
           <CommandGroup>
-            {options.map((option) => (
-              <CommandItem
-                key={option.id}
-                value={option.id}
-                onSelect={(currentValue) => {
-                  const res = currentValue === value ? "" : currentValue;
-                  onChange(res);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    value === option.id ? "opacity-100" : "opacity-0",
-                  )}
-                />
-                {option.id}
-              </CommandItem>
-            ))}
+            {options?.map((option) =>
+              option ? (
+                <CommandItem
+                  key={option.id}
+                  value={option.id}
+                  onSelect={(currentValue) => {
+                    const res = currentValue === value ? "" : currentValue;
+                    onChange(res);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === option.id ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                  {option.id}
+                </CommandItem>
+              ) : null,
+            )}
           </CommandGroup>
         </Command>
       </PopoverContent>

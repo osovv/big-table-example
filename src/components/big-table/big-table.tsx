@@ -5,7 +5,7 @@ import {
   type ColumnDef,
   type RowData,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createArray } from "~/lib/utils";
 import { type Item } from "~/types/item";
 import { Button } from "~/components/ui/button";
@@ -18,6 +18,7 @@ import {
   useBigTableContext,
 } from "./big-table-context";
 import { type BigTableRow } from "./types";
+import { isEqual } from "radash";
 
 declare module "@tanstack/react-table" {
   interface TableMeta<TData extends RowData> {
@@ -134,9 +135,18 @@ const columns: ColumnDef<BigTableRow, Item | null>[] = [
   },
 ];
 
+type Id = number;
+
 export const BigTable = () => {
   const [tableData, setTableData] = useState<BigTableRow[]>(makeRows(40, 1));
   const [rowsCount, setRowsCounts] = useState("");
+
+  const touchedFields = useMemo(() => {
+    return new Map<
+      Id,
+      { initialState: BigTableRow; currentState: BigTableRow }
+    >();
+  }, []);
 
   const handleRowsCountChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -150,11 +160,18 @@ export const BigTable = () => {
     const newRows = makeRows(count, lastIndex + 1);
     setRowsCounts("");
     setTableData((d) => [...d, ...newRows]);
-    console.log(`Add ${count} rows`);
   };
 
   const handleSaveClick = () => {
-    console.log("Save");
+    const updatedFields = Array.from(touchedFields.entries())
+      .filter(([_, { initialState, currentState }]) => {
+        return !isEqual(initialState, currentState);
+      })
+      .map(([id, state]) => ({ id, state }));
+
+    console.group("Updated fields");
+    console.log(updatedFields);
+    console.groupEnd();
   };
 
   const maxLevel = 6;
@@ -167,6 +184,22 @@ export const BigTable = () => {
       updateData: (rowIndex: number, columnId: string, item: Item | null) => {
         if (columnId === "id") {
           return;
+        }
+
+        const row = tableData[rowIndex];
+
+        if (!row) {
+          console.error("Trying to update row with index", rowIndex);
+          return;
+        }
+
+        const id = row.id;
+
+        if (!touchedFields.has(id)) {
+          touchedFields.set(id, {
+            initialState: { ...row },
+            currentState: { ...row },
+          });
         }
 
         setTableData((old) =>
@@ -188,6 +221,17 @@ export const BigTable = () => {
                 acc[levelToReset as keyof Omit<typeof acc, "id">] = null;
                 return acc;
               }, updatedRow);
+
+              const field = touchedFields.get(id);
+
+              if (!field) {
+                console.error("Something went wrong...");
+              } else {
+                touchedFields.set(id, {
+                  ...field,
+                  currentState: { ...result },
+                });
+              }
 
               return result;
             }

@@ -94,7 +94,7 @@ const Cell = (props: CellContext<BigTableRow, Item | null>) => {
 const columns: ColumnDef<BigTableRow, Item | null>[] = [
   {
     accessorKey: "id",
-    header: "№",
+    header: "Id",
   },
   {
     accessorKey: "1",

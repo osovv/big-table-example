@@ -1,28 +1,73 @@
-# Create T3 App
+# Techical Task
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+## Goal
 
-## What's next? How do I make an app with this?
+1. A table that contains 6 columns:
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- 1st column: Row sequence number
+- 2nd - 6th column: Nesting Level (from 1 to 5).
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+2. Table cell with Nesting Level is a Select with search:
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+   Example data for allOptions:
 
-## Learn More
+```js
+[
+  {
+    id: "1.1",
+    parentId: null,
+  },
+  {
+    id: "1.2",
+    parentId: null,
+  },
+  {
+    id: "2.1",
+    parentId: "1.1",
+  },
+  {
+    id: "2.2",
+    parentId: "1.2",
+  },
+  {
+    id: "3.1",
+    parentId: "2.1",
+  },
+  {
+    id: "3.2",
+    parentId: "2.2",
+  },
+  {
+    id: "4.1",
+    parentId: "3.1",
+  },
+  {
+    id: "4.2",
+    parentId: "3.2",
+  },
+  {
+    id: "5.1",
+    parentId: "4.1",
+  },
+  {
+    id: "5.2",
+    parentId: "4.2",
+  },
+];
+```
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+Options in select should be filtered based on the selected value in the previous cell in this row (for Level 1 - parentId: null)
+If the search in select does not find an Option - the Add button is displayed. Add Option is added with a binding to the value in the previous cell in this row (id: searchQuery, parentId: parentValue)
+When changing the value in a cell - all the following values in this row should be reset.
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+3. Under the table there is a Text field + Add row button.
+   By clicking on the Add Row button, rows are added to the table in the number of rows specified in the Text field.
+   When adding 100000+ rows the form should not hang - you should take this into account when writing the code
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+4. Save button - by clicking it, the selected values in the form are dumped to the console.
 
-## How do I deploy this?
+You can use any React libraries for development
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+Styles for the form any/no styles
+
++TypeScript
